@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBD Admin Dashboard | Premium Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Cinzel:wght@700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+    <link rel="preload" as="image" href="images/Menu Hero.png">
+    <style>
+        .iframe-wrapper { background: #0d0d0d !important; }
+    </style>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- SUPABASE REMOVED - NO-DATABASE GENERATOR MODE ACTIVE -->
+</head>
+
+<body>
+    <div class="dashboard-container no-sidebar">
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 id="page-title">Générateur de Menu Premium</h2>
+                    <p class="date" id="current-date"></p>
+                </div>
+                <div class="header-right">
+                    <button onclick="clearFullSession()" class="btn btn-outline btn-sm" style="display:flex; align-items:center; gap:8px;">
+                        <i data-lucide="trash-2"></i> Effacer Tout
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Live Editor Tab Content -->
+                <div id="tab-live" class="tab-content active">
+                    <div class="live-editor-card">
+                        <div class="card-header" style="margin-bottom: 20px;">
+                            <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="zap"
+                                    style="color:#f7d488;"></i> Outil de Menu Premium</h3>
+                        </div>
+
+                        <div class="live-tool-layout">
+                            <div class="form-section">
+                                <div id="slots-container" class="slots-container mini-scroll" style="flex: 1;">
+                                    <!-- Slots 1 to 7 will be rendered here by JS -->
+                                    <div class="loading-state"
+                                        style="text-align:center; padding: 40px; color: rgba(255,255,255,0.2);">
+                                        <i data-lucide="loader-2" class="spin" style="margin-bottom: 10px;"></i>
+                                        <p>Chargement du menu...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="live-preview-section">
+                                <div class="preview-header">
+                                    <span style="display: flex; align-items: center; gap: 8px;"><i
+                                            data-lucide="layout"></i> Aperçu du Menu</span>
+                                    <div style="display: flex; gap: 15px;">
+                                        <button class="btn btn-download btn-sm" onclick="downloadMenuData()"><i
+                                                data-lucide="download"></i> Télécharger</button>
+                                        <button class="btn btn-outline btn-sm" onclick="resetLivePreview()"><i
+                                                data-lucide="refresh-cw"></i> Réinitialiser</button>
+                                    </div>
+                                </div>
+                                <div class="iframe-wrapper">
+                                    <iframe id="live-tab-preview" src="menu.html?mode=sandbox" frameborder="0"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Manage Categories Modal (for Live Tool) -->
+    <div id="manage-cat-modal" class="modal-overlay">
+        <div class="modal-card wide" style="width: 750px; max-width: 95%;">
+            <div class="modal-header">
+                <h3>Gérer la Structure du Menu</h3>
+                <button class="close-modal-btn" onclick="closeManageCatModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="category-manager-card" style="border:none; padding:0; background:transparent;">
+                    <div class="card-header" style="margin-bottom: 20px;">
+                        <button class="btn btn-add-item" onclick="openCatAddModal()">
+                            <i data-lucide="plus"></i> Nouvelle Catégorie
+                        </button>
+                    </div>
+                    <p style="margin-bottom: 20px; color: rgba(255,255,255,0.4); font-size: 13px;">Réorganiser ou renommer
+                        vos sections</p>
+                    <div id="modal-categories-list-container" class="item-list modal-scroll"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-card wide">
+            <div class="modal-header">
+                <h3>Modifier le Produit</h3>
+                <button class="close-modal-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body split">
+                <div class="form-section">
+                    <input type="hidden" id="modal-product-id">
+                    <div class="field">
+                        <label>Nom du Produit</label>
+                        <input type="text" id="modal-name" placeholder="Nom du produit">
+                    </div>
+                    <div class="field">
+                        <label>Catégorie</label>
+                        <select id="modal-category"></select>
+                    </div>
+                    <div class="field-grid">
+                        <div class="field">
+                            <label>Prix/g (€)</label>
+                            <input type="text" id="modal-price" placeholder="6">
+                        </div>
+                        <div class="field">
+                            <label>Ordre d'Affichage</label>
+                            <input type="number" id="modal-order" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Détail Quantité / Spécial (€)</label>
+                        <input type="text" id="modal-bulk" placeholder="50">
+                    </div>
+                </div>
+
+                <div class="modal-preview-section">
+                    <div class="preview-label"><i data-lucide="eye"></i> Aperçu en Direct</div>
+                    <div class="modal-iframe-wrapper">
+                        <iframe id="modal-live-preview" src="menu.html" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+                <button class="btn btn-gold" onclick="applyModalChanges()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div id="cat-modal" class="modal-overlay">
+        <div class="modal-card wide">
+            <div class="modal-header">
+                <h3>Paramètres de la Catégorie</h3>
+                <button class="close-modal-btn" onclick="closeCatModal()">&times;</button>
+            </div>
+            <div class="modal-body split">
+                <div class="form-section">
+                    <input type="hidden" id="modal-cat-id">
+                    <div class="field">
+                        <label>Nom de la Catégorie</label>
+                        <input type="text" id="modal-cat-name" placeholder="ex. FLEURS HYDRO">
+                    </div>
+                    <div class="field">
+                        <label>Ordre d'Affichage</label>
+                        <input type="number" id="modal-cat-order" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="modal-preview-section">
+                    <div class="preview-label"><i data-lucide="eye"></i> Aperçu en Direct</div>
+                    <div class="modal-iframe-wrapper">
+                        <iframe id="cat-modal-live-preview" src="menu.html" frameborder="0"></iframe>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeCatModal()">Annuler</button>
+                <button class="btn btn-gold" onclick="applyCatModalChanges()">Enregistrer la Catégorie</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal-overlay">
+        <div class="modal-card mini">
+            <div class="modal-body text-center">
+                <div class="warning-icon-wrapper" style="margin-bottom: 20px; color: #ff4d4d;">
+                    <i data-lucide="alert-triangle" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h3>Êtes-vous sûr ?</h3>
+                <p id="delete-modal-text" style="color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 10px;">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer" style="justify-content: center; gap: 15px;">
+                <button class="btn btn-outline" onclick="closeDeleteModal()">Annuler</button>
+                <button class="btn btn-danger" id="confirm-delete-btn"
+                    style="background: #ff4d4d; color: white; border:none; padding: 10px 25px; border-radius: 10px; cursor: pointer; font-weight: 600;">Oui, Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Display current date
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR', options);
+        // Sidebar Navigation
+        const navItems = document.querySelectorAll('.nav-item[data-tab]');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tabId = item.getAttribute('data-tab');
+
+                // Update active nav state
+                navItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                // Update tab visibility
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `tab-${tabId}`) {
+                        content.classList.add('active');
+                    }
+                });
+
+                // --- Sidebar Visibility Control ---
+                const dashboard = document.querySelector('.dashboard-container');
+                if (tabId === 'live') {
+                    dashboard.classList.add('hide-sidebar');
+                    // Reset tool state when entering the tab
+                    refreshLiveIframe();
+                } else {
+                    dashboard.classList.remove('hide-sidebar');
+                }
+
+                document.getElementById('page-title').innerText = item.querySelector('span').innerText;
+            });
+        });
+        // Sub-tab Navigation logic
+        const subNavButtons = document.querySelectorAll('.sub-nav-btn');
+        subNavButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const subTabId = btn.getAttribute('data-sub-tab');
+
+                subNavButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                document.querySelectorAll('.sub-content').forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `sub-tab-${subTabId}`) content.classList.add('active');
+                });
+            });
+        });
+
+        // --- SUPABASE DATA MANAGEMENT ---
+
+        // --- PURE LOCAL STORAGE ENGINE ---
+        async function loadDataFromSupabase() {
+            try {
+                // Restore Categories and Products from LocalStorage
+                const localCats = JSON.parse(localStorage.getItem('cbd_local_categories') || "[]");
+                const localProducts = JSON.parse(localStorage.getItem('cbd_local_products') || "[]");
+
+                // PRESERVE GENERATED CATEGORIES (Session-specific)
+                // Filter out any matching IDs from focal cache that were just deleted from localStorage
+                const generatedCats = (window.cachedCategories || []).filter(c => c.is_generated && !localCats.some(lc => lc.id === c.id));
+                
+                // IMPORTANT: If a recently added session cat was deleted, it won't be in localStorage anymore. 
+                // We should only keep generated cats that were NOT meant for permanent storage or were just created.
+                window.cachedCategories = [...localCats, ...generatedCats];
+                
+                window.cachedProducts = localProducts;
+
+                const menuContainer = document.getElementById('menu-sections-container');
+                if (menuContainer) {
+                    menuContainer.innerHTML = `
+                        <div class="editor-section-card full-width">
+                            <div class="card-header">
+                                <h3>Inventaire des Produits</h3>
+                                <button class="btn btn-add-item" onclick="openAddModal()"><i data-lucide="plus"></i> Ajouter un Produit</button>
+                            </div>
+                            <div id="all-products-list" class="item-list">
+                                ${products.map(p => {
+                        // Smart Shorthand Logic for Admin View (e.g., 8/1 -> 8€/G)
+                        let rawPrice = String(p.price_per_gram || '').replace(/€/g, '').trim();
+                        let displayPrice = '';
+
+                        if (rawPrice.includes('/')) {
+                            const [price, qty] = rawPrice.split('/');
+                            displayPrice = qty === '1' ? `${price}€/G` : `${price}€/${qty}G`;
+                        } else if (rawPrice) {
+                            displayPrice = `${rawPrice}€`;
+                        } else {
+                            displayPrice = '-';
+                        }
+
+                        // Bulk shorthand logic for admin view
+                        let rawBulk = String(p.bulk_price || '').replace(/€/g, '').trim();
+                        let displayBulk = '';
+                        if (rawBulk.includes('/')) {
+                            const [bp, bq] = rawBulk.split('/');
+                            displayBulk = ` (${bp}€/${bq}G)`;
+                        } else if (rawBulk) {
+                            displayBulk = ` (${rawBulk}€)`;
+                        }
+
+                        return `
+                                        <div class="simple-item-row" data-product-id="${p.id}" id="row-${p.id}">
+                                            <div class="row-info">
+                                                <span class="p-name">${p.name.toUpperCase()}</span>
+                                                <span class="p-cat">${categories.find(c => c.id === p.category_id)?.name || 'Inconnu'}</span>
+                                                <span class="p-price">${displayPrice}${displayBulk}</span>
+                                            </div>
+                                            <div class="row-actions">
+                                                <button class="action-btn edit" onclick="openEditModal('${p.id}')"><i data-lucide="edit-3"></i></button>
+                                                <button class="action-btn delete" onclick="deleteProductRow('${p.id}')"><i data-lucide="trash-2"></i></button>
+                                            </div>
+                                        </div>
+                                    `;
+                    }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // 2. Render Categories List (Both main and modal)
+                const catTemplate = categories.map((cat, index) => `
+                    <div class="simple-item-row" data-cat-id="${cat.id}">
+                        <div class="row-info">
+                            <i data-lucide="layers" style="color: #f7d488; opacity: 0.5; width:16px;"></i>
+                            <span class="p-name">${cat.name}</span>
+                            <span class="p-price" style="margin-left:auto;">Ordre: ${cat.display_order}</span>
+                        </div>
+                        <div class="row-actions">
+                            <button class="action-btn edit" onclick="openCatEditModal('${cat.id}')"><i data-lucide="edit-3"></i></button>
+                            <button class="action-btn delete" onclick="deleteCategory('${cat.id}')"><i data-lucide="trash-2"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+
+                const catListContainer = document.getElementById('categories-list-container');
+                if (catListContainer) catListContainer.innerHTML = catTemplate;
+
+                const modalCatListContainer = document.getElementById('modal-categories-list-container');
+                if (modalCatListContainer) modalCatListContainer.innerHTML = catTemplate;
+
+                lucide.createIcons();
+
+                // Update Live Tool Selectors
+                const liveSelector = document.getElementById('live-product-selector');
+                if (liveSelector) {
+                    liveSelector.innerHTML = `<option value="">-- Choisir un produit --</option>` + products.sort((a, b) => a.name.localeCompare(b.name)).map(p =>
+                        `<option value="${p.id}">${p.name.toUpperCase()}</option>`
+                    ).join('');
+                }
+
+                const liveCatSelector = document.getElementById('live-category');
+                if (liveCatSelector) {
+                    liveCatSelector.innerHTML = `<option value="">Sélectionner</option>` + categories.map(cat =>
+                        `<option value="${cat.id}">${cat.name}</option>`
+                    ).join('');
+                }
+
+            } catch (err) {
+                console.error("Error loading local data:", err);
+            }
+        }
+
+        // --- MODAL LOGIC ---
+        async function openEditModal(productId) {
+            // Find product in local cache
+            const p = window.cachedProducts.find(item => item.id === productId);
+            if (!p) return showToast("Produit non trouvé", "error");
+
+            // Refresh the live preview iframe with a tiny delay
+            const previewFrame = document.getElementById('modal-live-preview');
+            if (previewFrame) {
+                setTimeout(() => {
+                    previewFrame.src = 'menu.html?mode=sandbox&t=' + Date.now();
+                }, 300);
+            }
+
+            // Fill Modal Fields
+            document.getElementById('modal-product-id').value = p.id;
+            document.getElementById('modal-name').value = p.name;
+            document.getElementById('modal-price').value = p.price_per_gram || '';
+            document.getElementById('modal-bulk').value = p.bulk_price || '';
+            document.getElementById('modal-order').value = p.display_order || 0;
+
+            const select = document.getElementById('modal-category');
+            select.innerHTML = window.cachedCategories.map(cat =>
+                `<option value="${cat.id}" ${cat.id === p.category_id ? 'selected' : ''}>${cat.name}</option>`
+            ).join('');
+
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        function openAddModal() {
+            // Refresh the live preview iframe with a tiny delay to prevent graphics board crash
+            const previewFrame = document.getElementById('modal-live-preview');
+            if (previewFrame) {
+                setTimeout(() => {
+                    previewFrame.src = 'menu.html?mode=sandbox&t=' + Date.now();
+                }, 300);
+            }
+
+            document.getElementById('modal-product-id').value = '';
+            document.getElementById('modal-name').value = '';
+            document.getElementById('modal-price').value = '';
+            document.getElementById('modal-bulk').value = '';
+            document.getElementById('modal-order').value = 0;
+
+            const select = document.getElementById('modal-category');
+            select.innerHTML = window.cachedCategories.map(cat =>
+                `<option value="${cat.id}">${cat.name}</option>`
+            ).join('');
+
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+            // Reset modal preview to blank to free up browser resources for the main board
+            const modalPreview = document.getElementById('modal-live-preview');
+            if (modalPreview) modalPreview.src = 'about:blank';
+        }
+
+        // --- PURE LOCAL STORAGE SAVING ---
+        async function applyModalChanges() {
+            const id = document.getElementById('modal-product-id').value;
+            const rawPrice = document.getElementById('modal-price').value;
+            const rawBulk = document.getElementById('modal-bulk').value;
+            const catId = document.getElementById('modal-category').value;
+            const cat = window.cachedCategories.find(c => c.id === catId);
+            const isOthers = cat && cat.display_order === 7;
+
+            const cleanPrice = rawPrice.replace(/[€\s]/g, '');
+            const cleanBulk = isOthers ? rawBulk.trim() : rawBulk.replace(/[€\s]/g, '');
+
+            const updatedProduct = {
+                name: document.getElementById('modal-name').value,
+                category_id: catId,
+                price_per_gram: cleanPrice,
+                bulk_price: cleanBulk,
+                display_order: parseInt(document.getElementById('modal-order').value) || 0,
+                id: id || `p_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                created_at: new Date().toISOString()
+            };
+
+            // Retrieve and Update Local Inventory
+            let localProducts = JSON.parse(localStorage.getItem('cbd_local_products') || "[]");
+            if (id) {
+                localProducts = localProducts.map(p => p.id === id ? updatedProduct : p);
+            } else {
+                localProducts.push(updatedProduct);
+            }
+            localStorage.setItem('cbd_local_products', JSON.stringify(localProducts));
+
+            showToast(id ? "Produit mis à jour" : "Produit ajouté", "success");
+            closeModal();
+            loadDataFromSupabase(); // Refreshes both local cache and UI
+            refreshLiveIframe();
+        }
+
+        // --- LIGHTNING SYNC ENGINE ---
+        // Debounce sync to prevent layout thrashing
+        let syncTimeout;
+        function syncPreview() {
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(() => {
+                const id = document.getElementById('modal-product-id').value;
+                const catId = document.getElementById('modal-category').value;
+                const name = document.getElementById('modal-name').value;
+                const price = document.getElementById('modal-price').value;
+                const bulk = document.getElementById('modal-bulk').value;
+
+                if (!catId) return;
+
+                const cat = window.cachedCategories.find(c => c.id === catId);
+                const isOthersCat = cat && cat.display_order === 7;
+
+                // 1. FORMATTING
+                let formattedPrice = '';
+                let rawP = price.replace(/[€\s]/g, '');
+                if (rawP.includes('/')) {
+                    const [p, q] = rawP.split('/');
+                    formattedPrice = (q === '1' || !q) ? `${p}€/G` : `${p}€/${q}G`;
+                } else if (rawP) {
+                    formattedPrice = `${rawP}€`;
+                }
+
+                let formattedBulk = '';
+                let rawB = String(bulk || '').replace(/[€\s]/g, '');
+                if (rawB.includes('/')) {
+                    const [p, q] = rawB.split('/');
+                    formattedBulk = q === '1' ? `${p}€/G` : `${p}€/${q}G`;
+                } else if (/[a-zA-Z]/.test(rawB)) {
+                    formattedBulk = rawB; 
+                } else if (rawB) {
+                    formattedBulk = `${rawB}€`;
+                }
+
+
+
+                // 2. UPDATE ALL FRAMES
+                const frames = [
+                    document.getElementById('modal-live-preview'),
+                    document.getElementById('live-tab-preview')
+                ];
+
+                frames.forEach(frame => {
+                    if (!frame || !frame.contentDocument || frame.contentDocument.readyState !== 'complete') return;
+                if (frame.src.includes('about:blank')) return;
+                    const doc = frame.contentDocument;
+
+                    let itemsToUpdate = [];
+                    if (id) {
+                        itemsToUpdate = [...doc.querySelectorAll(`[data-product-id="${id}"]`)];
+                    }
+
+                    const targetSection = doc.querySelector(`[data-cat-id="${catId}"]`);
+                    if (targetSection) {
+                        const sandbox = targetSection.querySelector('[data-product-id="sandbox-item"]');
+                        if (sandbox) {
+                            sandbox.style.display = (name || price) ? 'flex' : 'none';
+                            itemsToUpdate.push(sandbox);
+                        }
+                    }
+
+                    itemsToUpdate.forEach(item => {
+                        const nameEl = item.querySelector('.name') || item.querySelector('.qty');
+                        if (nameEl) nameEl.innerText = name.toUpperCase() || 'NOUVEAU PRODUIT';
+
+                        const pEl = item.querySelector('.price') || item.querySelector('.val');
+                        if (pEl) {
+                            if (item.classList.contains('item')) {
+                                if (pEl.firstChild) pEl.firstChild.textContent = (formattedPrice || 'PRIX') + " ";
+                            } else {
+                                pEl.innerHTML = isOthersCat ? (formattedPrice || 'PRIX').replace(/€/g, '<span class="euro-sep">€</span>') : formattedPrice;
+                            }
+                        }
+
+                        const bEl = item.querySelector('.bulk') || item.lastElementChild;
+                        if (bEl && !item.classList.contains('val')) {
+                            if (item.classList.contains('item')) {
+                                const bSpan = item.querySelector('.bulk');
+                                if (bSpan) bSpan.innerText = formattedBulk || 'QUANTITÉ';
+                            } else {
+                                bEl.innerHTML = isOthersCat ? (formattedBulk || 'QUANTITÉ').replace(/€/g, '<span class="euro-sep">€</span>') : (formattedBulk || 'QUANTITÉ');
+                            }
+                        }
+                    });
+                });
+            }, 50); // Small debounce
+        }
+
+        // Add Listeners
+        setTimeout(() => {
+            ['modal-name', 'modal-price', 'modal-bulk'].forEach(fid => {
+                const el = document.getElementById(fid);
+                if (el) el.addEventListener('input', syncPreview);
+            });
+        }, 1000);
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('active');
+        }
+
+        async function deleteProductRow(id) {
+            window.pendingDeleteId = id;
+            document.getElementById('delete-modal-text').innerText = "Voulez-vous vraiment supprimer ce produit ? Cette action est irréversible.";
+            document.getElementById('delete-modal').classList.add('active');
+
+            document.getElementById('confirm-delete-btn').onclick = async () => {
+                const prodId = window.pendingDeleteId;
+                
+                // --- PURE LOCAL DELETE ---
+                let localProducts = JSON.parse(localStorage.getItem('cbd_local_products') || "[]");
+                localProducts = localProducts.filter(p => p.id !== prodId);
+                localStorage.setItem('cbd_local_products', JSON.stringify(localProducts));
+
+                closeDeleteModal();
+                showToast("Supprimé définitivement", "success");
+                
+                await loadDataFromSupabase();
+                refreshLiveIframe();
+            };
+        }
+
+        // --- CATEGORY MODAL LOGIC ---
+        function openCatEditModal(id) {
+            const cat = window.cachedCategories.find(c => c.id === id);
+            if (!cat) return;
+
+            // Refresh preview
+            const iframe = document.getElementById('cat-modal-live-preview');
+            if (iframe) iframe.src = 'index.html';
+
+            document.getElementById('modal-cat-id').value = cat.id;
+            document.getElementById('modal-cat-name').value = cat.name;
+            document.getElementById('modal-cat-order').value = cat.display_order || 0;
+
+            document.getElementById('cat-modal').classList.add('active');
+        }
+
+        function openManageCatModal() {
+            document.getElementById('manage-cat-modal').classList.add('active');
+        }
+
+        function closeManageCatModal() {
+            document.getElementById('manage-cat-modal').classList.remove('active');
+        }
+
+        function openCatAddModal() {
+            // Refresh preview
+            const iframe = document.getElementById('cat-modal-live-preview');
+            if (iframe) iframe.src = 'index.html';
+
+            document.getElementById('modal-cat-id').value = '';
+            document.getElementById('modal-cat-name').value = '';
+            document.getElementById('modal-cat-order').value = 0;
+
+            document.getElementById('cat-modal').classList.add('active');
+        }
+
+        // --- CATEGORY LIVE SYNC ---
+        function syncCatPreview() {
+            const id = document.getElementById('modal-cat-id').value;
+            if (!id) return;
+
+            const name = document.getElementById('modal-cat-name').value.toUpperCase();
+            const previewFrame = document.getElementById('cat-modal-live-preview');
+            if (!previewFrame || !previewFrame.contentDocument) return;
+
+            const doc = previewFrame.contentDocument;
+            const section = doc.querySelector(`[data-cat-id="${id}"]`);
+            if (!section) return;
+
+            const titleEl = section.querySelector('.title');
+            if (titleEl) titleEl.innerText = name;
+        }
+
+        document.getElementById('modal-cat-name').addEventListener('input', syncCatPreview);
+
+        function closeCatModal() {
+            document.getElementById('cat-modal').classList.remove('active');
+        }
+
+        async function applyCatModalChanges() {
+            const id = document.getElementById('modal-cat-id').value;
+            const name = document.getElementById('modal-cat-name').value.toUpperCase();
+            const order = parseInt(document.getElementById('modal-cat-order').value) || 0;
+
+            if (id) {
+                // Update local cache only
+                const cat = window.cachedCategories.find(c => c.id === id);
+                if (cat) {
+                    cat.name = name;
+                    cat.display_order = order;
+                }
+            } else {
+                // Should not really happen in generator mode for modal, 
+                // but we handle it just in case
+                const localId = `gen_${order}_${Date.now()}`;
+                window.cachedCategories.push({ id: localId, name, display_order: order, is_generated: true });
+            }
+
+            showToast("Catégorie mise à jour localement", "success");
+            closeCatModal();
+            renderLiveSlots();
+            refreshLiveIframe();
+        }
+
+        async function deleteCategory(id) {
+            window.pendingDeleteId = id;
+            document.getElementById('delete-modal-text').innerText = "Voulez-vous vraiment supprimer cette version ?";
+            document.getElementById('delete-modal').classList.add('active');
+
+            document.getElementById('confirm-delete-btn').onclick = async () => {
+                const catId = window.pendingDeleteId;
+                
+                // 1. Remove from Local Storage
+                let localCats = JSON.parse(localStorage.getItem('cbd_local_categories') || "[]");
+                localStorage.setItem('cbd_local_categories', JSON.stringify(localCats.filter(c => c.id !== catId)));
+
+                // 2. Remove from Active Memory (Ghost fix)
+                window.cachedCategories = (window.cachedCategories || []).filter(c => c.id !== catId);
+
+                closeDeleteModal();
+                showToast("Version supprimée", "success");
+
+                // 3. Cleanup active slots (Revert to default placeholders)
+                for(let i=1; i<=7; i++) {
+                    if (window.activeSlotCategories[i] === catId) {
+                        const defaultId = `session_slot_${i}`;
+                        window.activeSlotCategories[i] = defaultId;
+
+                        // RE-CREATE PLACEHOLDER OBJECT (Placeholder Protection)
+                        if (!window.cachedCategories.some(c => c.id === defaultId)) {
+                            window.cachedCategories.push({
+                                id: defaultId,
+                                name: `CATÉGORIE ${i}`,
+                                display_order: i,
+                                is_generated: true,
+                                is_placeholder: true
+                            });
+                        }
+                    }
+                }
+                saveSlotState();
+                
+                renderLiveSlots();
+                refreshLiveIframe();
+            };
+        }
+
+        async function downloadMenuData() {
+            // Check if we are in the Live Editor tab
+            const isLiveTab = document.getElementById('tab-live').classList.contains('active');
+            const liveIframe = document.getElementById('live-tab-preview');
+
+            const btn = isLiveTab ? document.querySelector('#tab-live .btn-download') : document.querySelector('#tab-menu .btn-download');
+            const originalContent = btn.innerHTML;
+
+            showToast("Génération de l'image haute résolution...", "success");
+            btn.innerHTML = `<i data-lucide="loader-2" class="spin"></i> Capture en cours...`;
+            btn.style.opacity = '0.7';
+            btn.style.pointerEvents = 'none';
+            lucide.createIcons();
+
+            let menuElement;
+            let tempIframe = null;
+
+            if (isLiveTab && liveIframe && liveIframe.contentDocument) {
+                // CAPTURE CURRENT LIVE PREVIEW
+                menuElement = liveIframe.contentDocument.querySelector('.menu-container');
+                const doc = liveIframe.contentDocument;
+
+                // --- CAPTURE-ONLY INJECTION: ONLY FOR ROW 2 ---
+                const items = doc.querySelectorAll('.discount-row');
+                if (items[1]) {
+                    const euroSeps = items[1].querySelectorAll('.euro-sep');
+                    euroSeps.forEach(s => { s.innerHTML = '&nbsp;€'; });
+                    window.captureTargetItem = items[1]; // Store for cleanup
+                }
+            } else {
+                // CAPTURE FULL MENU (Standard behavior)
+                tempIframe = document.createElement('iframe');
+                tempIframe.style.position = 'fixed';
+                tempIframe.style.top = '-2000px';
+                tempIframe.style.width = '1024px';
+                tempIframe.style.height = '680px';
+                tempIframe.src = 'menu.html?t=' + Date.now();
+                document.body.appendChild(tempIframe);
+
+                // Wait for high-res iframe to load
+                await new Promise(resolve => tempIframe.onload = resolve);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for Supabase data
+
+                const doc = tempIframe.contentDocument;
+                const items = doc.querySelectorAll('.discount-row');
+                if (items[1]) {
+                    const euroSeps = items[1].querySelectorAll('.euro-sep');
+                    euroSeps.forEach(s => { s.innerHTML = '&nbsp;€'; });
+                }
+
+                menuElement = doc.querySelector('.menu-container');
+            }
+
+            if (!menuElement) {
+                showToast("Erreur : Conteneur de menu introuvable.", "error");
+                btn.innerHTML = originalContent;
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                lucide.createIcons();
+                if (tempIframe) document.body.removeChild(tempIframe);
+                return;
+            }
+
+            try {
+                const canvas = await html2canvas(menuElement, {
+                    useCORS: true,
+                    backgroundColor: '#000',
+                    scale: 2,
+                    logging: false
+                });
+
+                const image = canvas.toDataURL("image/png");
+                const link = document.createElement('a');
+                link.download = isLiveTab ? `LIVE_SESSION_MENU.png` : `CBD_MENU_FULL.png`;
+                link.href = image;
+                link.click();
+                showToast("PNG exporté avec succès !", "success");
+            } catch (err) {
+                console.error("Capture Error:", err);
+                showToast("Échec de l'exportation.", "error");
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                lucide.createIcons();
+
+                // Cleanup
+                if (tempIframe) document.body.removeChild(tempIframe);
+                if (isLiveTab && liveIframe.contentDocument) {
+                    if (window.captureTargetItem) {
+                        window.captureTargetItem.querySelectorAll('.euro-sep').forEach(s => s.innerHTML = '€');
+                        window.captureTargetItem = null;
+                    }
+                }
+            }
+        }
+
+
+
+        // --- NEW SLOTS ENGINE (Fresh Start on Refresh) ---
+        // --- FRESH START PHILOSOPHY (with Starter Template) ---
+        // Wipe everything (including Local Inventory) for a truly blank canvas on refresh
+        localStorage.clear(); 
+        sessionStorage.clear();
+
+        window.activeSlotCategories = {};
+        window.cachedCategories = [];
+        window.cachedProducts = [];
+        window.pageLoadTime = new Date().toISOString();
+
+        // --- STARTER TEMPLATE: Populate Slots 1-7 with placeholders ---
+        for (let i = 1; i <= 7; i++) {
+            const stableId = `session_slot_${i}`;
+            const placeholder = { 
+                id: stableId, 
+                name: `CATÉGORIE ${i}`, 
+                display_order: i,
+                is_generated: true,
+                is_placeholder: true 
+            };
+            window.cachedCategories.push(placeholder);
+            window.activeSlotCategories[i] = stableId;
+        }
+        
+        // Push starter state to storage so the iframe picks it up immediately
+        saveSlotState();
+
+        // Helper to save state (kept for internal dashboard use within the same session if needed)
+        // Helper to save state (Generator Mode: Save all ephemeral data)
+        function saveSlotState() {
+            sessionStorage.setItem('cbd_active_slots', JSON.stringify(window.activeSlotCategories));
+            
+            // Save generated categories
+            const genCats = (window.cachedCategories || []).filter(c => c.is_generated);
+            sessionStorage.setItem('cbd_gen_cats', JSON.stringify(genCats));
+            
+            // Save session products (since Supabase might be offline)
+            sessionStorage.setItem('cbd_session_products', JSON.stringify(window.cachedProducts || []));
+        }
+
+        async function renderLiveSlots() {
+            const container = document.getElementById('slots-container');
+            if (!container) return;
+
+            const categories = window.cachedCategories || [];
+            const products = window.cachedProducts || [];
+
+            let html = '';
+
+            for (let i = 1; i <= 7; i++) {
+                // Filter categories that belong to this slot (order position)
+                const slotCats = categories.filter(c => parseInt(c.display_order) === i);
+
+                // Determine active category for this slot
+                let activeCatId = window.activeSlotCategories[i] || "";
+
+                const activeCat = slotCats.find(c => c.id === activeCatId);
+                
+                // SESSION FILTER: Only show products created after the user opened this dashboard page
+                const slotProducts = activeCat ? products.filter(p => {
+                    return p.category_id === activeCat.id && p.created_at >= window.pageLoadTime;
+                }).sort((a,b) => {
+                    if (typeof a.id === 'number') return b.id - a.id;
+                    return b.id.toString().localeCompare(a.id.toString());
+                }) : [];
+
+                html += `
+                    <div class="slot-card ${activeCatId ? 'active' : ''}" id="slot-${i}">
+                        <div class="slot-header">
+                            <span>Catégorie ${i}</span>
+                            <i data-lucide="layers" style="width:14px; opacity:0.3;"></i>
+                        </div>
+
+                        <div class="field" style="margin-bottom: 12px;">
+                            <label style="font-size: 10px; opacity: 0.5;">Ajouter une version de catégorie</label>
+                            <div style="display:flex; gap:8px;">
+                                <input type="text" id="slot-new-input-${i}" 
+                                    placeholder="Entrer une nouvelle catégorie..."
+                                    style="font-weight: 700; color: #f7d488; font-size: 15px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; flex:1;">
+                                <button class="btn btn-gold" onclick="addNewCategoryToSlot(${i})" 
+                                    style="width: 38px; height: 38px; padding:0; display:flex; align-items:center; justify-content:center; flex:none; border-radius: 8px;">
+                                    <i data-lucide="save" style="width:16px; height:16px;"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="field" style="margin-bottom: 20px;">
+                            <label style="font-size: 10px; opacity: 0.5;">Liste des catégories</label>
+                            <div class="custom-select-wrapper" id="custom-select-${i}">
+                                <div class="custom-select-trigger" onclick="toggleCustomDropdown(${i})">
+                                    <span>${activeCat ? activeCat.name : '-- SÉLECTIONNER LA CATÉGORIE --'}</span>
+                                    <i data-lucide="chevron-down" style="width:14px;"></i>
+                                </div>
+                                <div class="custom-select-list mini-scroll">
+                                    <div class="custom-item ${!activeCatId ? 'active' : ''}" onclick="chooseCategory(${i}, '')">
+                                        <span class="cat-name">-- SÉLECTIONNER LA CATÉGORIE --</span>
+                                    </div>
+                                    ${slotCats.map(c => `
+                                        <div class="custom-item ${c.id === activeCatId ? 'active' : ''}" onclick="chooseCategory(${i}, '${c.id}')">
+                                            <span class="cat-name">${c.name}</span>
+                                            <button class="cat-delete-btn" onclick="event.stopPropagation(); deleteCategory('${c.id}')">
+                                                <i data-lucide="trash-2" style="width:14px;"></i>
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                             <label style="font-size: 10px; opacity: 0.5;">Produits de la Session</label>
+                        </div>
+
+                        <div class="slot-products-list mini-scroll">
+                            ${slotProducts.length === 0 ? '<p style="font-size:11px; color:rgba(255,255,255,0.2); text-align:center; padding: 20px 0;">Aucun nouveau produit ajouté pour le moment.</p>' : ''}
+                            ${slotProducts.map(p => `
+                                <div class="slot-product-item" onclick="openEditModal('${p.id}')" style="cursor:pointer;">
+                                    <div style="display:flex; flex-direction:column; gap:2px;">
+                                        <span style="font-weight:600;">${p.name.toUpperCase()}</span>
+                                        <span class="p-meta">${p.price_per_gram}€ ${p.bulk_price ? '| ' + p.bulk_price : ''}</span>
+                                    </div>
+                                    <div style="display:flex; gap:5px; align-items:center;">
+                                        <button class="action-btn" onclick="event.stopPropagation(); openEditModal('${p.id}')" style="width:26px; height:26px; background: rgba(74,222,128,0.05); border:1px solid rgba(74,222,128,0.2); color: #4ade80;">
+                                            <i data-lucide="edit-3" style="width:11px;"></i>
+                                        </button>
+                                        <button class="action-btn delete" onclick="event.stopPropagation(); deleteProduct('${p.id}')" style="width:26px; height:26px;">
+                                            <i data-lucide="x" style="width:12px;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <button class="btn btn-outline full-width" style="margin-top: 10px; border-style: dashed; opacity: 0.7;" onclick="openAddProductModalForCat('${activeCatId}')">
+                            <i data-lucide="plus" style="width:14px; margin-right:5px;"></i> Ajouter un Produit
+                        </button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+            lucide.createIcons();
+            // syncAllSlotTitlesToPreview is now called explicitly to avoid loops
+        }
+
+        async function openAddProductModalForCat(catId) {
+            openAddModal();
+            // Wait a tiny bit for the DOM to update via openAddModal then set the category
+            setTimeout(() => {
+                const select = document.getElementById('modal-category');
+                if (select) {
+                    select.value = catId;
+                }
+            }, 10);
+        }
+
+
+        async function addNewCategoryToSlot(slotNum) {
+            const input = document.getElementById(`slot-new-input-${slotNum}`);
+            const newName = input.value.trim();
+            if (!newName) return showToast("Entrez d'abord un nom", "error");
+
+            // GENERATOR MODE: Use a stable slot-based ID for perfect sync
+            const stableId = `session_slot_${slotNum}`;
+            
+            // Overwrite any existing version for this slot in the current session
+            const newCat = { 
+                id: stableId, 
+                name: newName.toUpperCase(), 
+                display_order: slotNum,
+                is_generated: true 
+            };
+
+            if (!window.cachedCategories) window.cachedCategories = [];
+            // Remove previous session versions of this slot from local memory
+            window.cachedCategories = window.cachedCategories.filter(c => c.id !== stableId);
+            window.cachedCategories.push(newCat);
+
+            window.activeSlotCategories[slotNum] = stableId;
+            saveSlotState();
+
+            showToast("Généré !", "success");
+            input.value = '';
+
+            renderLiveSlots();
+            refreshLiveIframe();
+        }
+
+        async function renameActiveCategory(slotNum) {
+            const catId = window.activeSlotCategories[slotNum];
+            if (!catId) return;
+
+            const cat = window.cachedCategories.find(c => c.id === catId);
+            const newName = prompt("Entrez un nouveau nom pour cette version de catégorie :", cat ? cat.name : "");
+
+            if (!newName) return;
+
+            // Sync locally
+            if (cat) cat.name = newName.toUpperCase();
+            
+            showToast("Renommé localement", "success");
+            renderLiveSlots();
+            refreshLiveIframe();
+        }
+
+
+        function toggleCustomDropdown(slotNum) {
+            const wrapper = document.getElementById(`custom-select-${slotNum}`);
+            const wasOpen = wrapper.classList.contains('open');
+            
+            // Close all others first
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+            
+            if (!wasOpen) wrapper.classList.add('open');
+        }
+
+        function chooseCategory(slotNum, catId) {
+            switchSlotCategory(slotNum, catId);
+            // Dropdown will close because renderLiveSlots is called inside switchSlotCategory
+        }
+
+        // Global click listener to close dropdowns
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-select-wrapper')) {
+                document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+            }
+        });
+
+        async function switchSlotCategory(slotNum, newCatId) {
+            const oldCatId = window.activeSlotCategories[slotNum];
+            window.activeSlotCategories[slotNum] = newCatId;
+            saveSlotState();
+
+            const board = document.getElementById('live-tab-preview');
+            if (board && board.contentWindow && board.contentWindow.switchActiveCategory) {
+                // Instantly hide the old category
+                if (oldCatId) board.contentWindow.switchActiveCategory(oldCatId, false);
+                
+                // Instantly reveal the new category
+                if (newCatId) {
+                    board.contentWindow.switchActiveCategory(newCatId, true);
+                    // Check if it actually showed up (it might not be pre-loaded if it's very new)
+                    const doc = board.contentDocument;
+                    if (doc && !doc.querySelector(`[data-cat-id="${newCatId}"]`)) {
+                        // Fallback to full refresh if it's a brand new category version
+                        refreshLiveIframe();
+                    }
+                }
+            }
+
+            renderLiveSlots();
+        }
+
+
+
+        async function clearSlotProducts(catId) {
+            if (!catId) return;
+            window.pendingDeleteId = catId;
+            document.getElementById('delete-modal-text').innerText = "Cela supprimera TOUS les produits de cette catégorie localement. Continuer ?";
+            document.getElementById('delete-modal').classList.add('active');
+
+            document.getElementById('confirm-delete-btn').onclick = async () => {
+                const targetCatId = window.pendingDeleteId;
+
+                // --- PURE LOCAL CLEAR ---
+                let localProducts = JSON.parse(localStorage.getItem('cbd_local_products') || "[]");
+                localProducts = localProducts.filter(p => p.category_id !== targetCatId);
+                localStorage.setItem('cbd_local_products', JSON.stringify(localProducts));
+
+                closeDeleteModal();
+                showToast("Liste effacée !", "success");
+                
+                await loadDataFromSupabase();
+                renderLiveSlots();
+                refreshLiveIframe();
+            };
+        }
+
+        async function deleteProduct(id) {
+            window.pendingDeleteId = id;
+            document.getElementById('delete-modal-text').innerText = "Voulez-vous retirer ce produit de la session ?";
+            document.getElementById('delete-modal').classList.add('active');
+
+            document.getElementById('confirm-delete-btn').onclick = async () => {
+                const prodId = window.pendingDeleteId;
+                
+                // --- INSTANT LOCAL REMOVAL ---
+                window.cachedProducts = (window.cachedProducts || []).filter(p => p.id !== prodId);
+                closeDeleteModal();
+                showToast("Retiré localement", "success");
+                
+                // Refresh both the slots UI and the preview board instantly
+                renderLiveSlots();
+                refreshLiveIframe();
+
+                // Background delete from Supabase (Silent fallback)
+                try {
+                    await supabaseClient.from('products').delete().eq('id', prodId);
+                } catch(e) {
+                    console.warn("Product deleted from session only (Supabase offline).");
+                }
+            };
+        }
+
+        // --- SESSION MANAGEMENT ---
+        function clearFullSession() {
+            document.getElementById('delete-modal-text').innerText = "Voulez-vous vraiment TOUT EFFACER (Layout + Inventaire Local) ? Cette action est irréversible.";
+            document.getElementById('delete-modal').classList.add('active');
+
+            document.getElementById('confirm-delete-btn').onclick = () => {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+            };
+        }
+
+        async function resetLivePreview() {
+            document.getElementById('delete-modal-text').innerText = "Voulez-vous vraiment réinitialiser l'aperçu en direct ? Cela effacera tout et rafraîchira la page.";
+            document.getElementById('delete-modal').classList.add('active');
+
+            document.getElementById('confirm-delete-btn').onclick = () => {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+            };
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDataFromSupabase();
+            
+            // Set current date
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            document.getElementById('current-date').innerText = today.toLocaleDateString('fr-FR', options);
+
+            lucide.createIcons();
+        });
+
+        function refreshLiveIframe() {
+            const iframe = document.getElementById('live-tab-preview');
+            if (!iframe) return;
+
+            // --- MEMORY-FIRST SYNC ---
+            // We use the absolute internal memory (window.activeSlotCategories) 
+            // instead of reading the screen. This ensures that even if the sidebar 
+            // is "re-drawing", we send a complete list of all saved selections.
+            const activeCatIds = [];
+            for (let i = 1; i <= 7; i++) {
+                const val = window.activeSlotCategories[i];
+                if (val) activeCatIds.push(val);
+            }
+            saveSlotState();
+
+            const activeCatsStr = activeCatIds.join(',');
+            const sessionTime = window.pageLoadTime;
+
+            // SILENT SYNC with Lag Shield
+            if (iframe.contentWindow && iframe.contentWindow.syncBoardState) {
+                iframe.contentWindow.syncBoardState(activeCatsStr, sessionTime, window.cachedCategories, window.cachedProducts);
+            } else {
+                iframe.src = `menu.html?mode=sandbox&session_time=${sessionTime}&active_cats=${activeCatsStr}&t=` + Date.now();
+            }
+        }
+
+        function showToast(message, type) {
+            // Notifications disabled as requested for a silent experience
+            return;
+        }
+
+        // --- OVERRIDE INITIAL LOAD ---
+        const originalLoadData = loadDataFromSupabase;
+        loadDataFromSupabase = async function () {
+            await originalLoadData();
+            renderLiveSlots();
+        };
+
+        // Initialize data loading
+        loadDataFromSupabase();
+
+    </script>
+</body>
+
+</html>

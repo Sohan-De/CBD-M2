@@ -1,0 +1,212 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    background: #0d0d0d;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 900px;
+    /* Allow manual vertical adjustment */
+    padding: 0;
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    color: #fff;
+    /* Hide scrollbar but keep functionality */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+}
+
+.menu-container {
+    width: 1024px;
+    height: 680px;
+    background: url('images/Menu%20Hero.png') no-repeat center center;
+    background-size: 1024px 680px;
+    position: relative;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+    border: 1px solid #333;
+}
+
+/* Base section styling */
+.section {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Individual Gap Control for each section */
+.fleurs-hydro-list {
+    gap: 17px;
+    padding-left: 4px;
+    padding-right: 6px;
+}
+
+.fleurs-elite-list {
+    gap: 17px;
+    margin-top: 4px;
+    padding-left: 4px;
+    padding-right: 6px;
+}
+
+.resine-cbd-list {
+    gap: 19px;
+    margin-top: -2px;
+    padding-left: 4px;
+    padding-right: 6px;
+}
+
+.olives-cbd-list {
+    gap: 16px;
+    margin-top: 2px;
+    padding-left: 4px;
+    padding-right: 6px;
+}
+
+.resine-cbn-list {
+    gap: 17px;
+    padding-left: 4px;
+    padding-right: 6px;
+}
+
+.fleurs-cbn-list {
+    gap: 17px;
+    margin-top: 4px;
+    padding-left: 4px;
+    padding-right: 6px;
+}
+
+.title {
+    font-family: 'Cinzel', serif;
+    font-size: 19px;
+    color: #f7d488;
+    /* Soft gold */
+    text-shadow: 1px 1px 1px #000, 0 0 8px rgba(247, 212, 136, 0.4);
+    text-align: center;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+    font-weight: 800;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px #000;
+    height: 18px;
+}
+
+.name {
+    color: #f0f0f0;
+    flex-shrink: 0;
+}
+
+.dots {
+    flex-grow: 1;
+    border-bottom: 2px dotted rgba(255, 255, 255, 0.3);
+    margin: 0 4px;
+    margin-bottom: 4px;
+}
+
+.price {
+    color: #fff;
+    flex-shrink: 0;
+    display: flex;
+    gap: 4px;
+}
+
+.bulk {
+    color: #ff4d4d;
+    /* Bright red */
+    font-weight: 800;
+}
+
+/*
+
+/* Bottom Discounts section on the wooden steps */
+.discounts {
+    position: absolute;
+    top: 505px;
+    left: 175px;
+    width: 670px;
+    display: flex;
+    flex-direction: column;
+}
+
+.discount-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    /* You can adjust this gap for discount rows */
+}
+
+/* --- SLOT 7 PREMIUM TITLE STYLE --- */
+.slot7-title-style {
+    font-family: 'Cinzel', serif;
+    font-size: 19px;
+    color: #f7d488;
+    text-shadow: 1px 1px 1px #000, 0 0 8px rgba(247, 212, 136, 0.4);
+    text-align: center;
+    width: 100%;
+    margin-top: 13px;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+    font-weight: 800;
+}
+
+.discount-row {
+    font-size: 21px;
+    font-weight: 800;
+    text-transform: uppercase;
+    text-align: center;
+    color: #fff;
+    text-shadow: 2px 2px 4px #000;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.discount-row .qty {
+    color: #f7d488;
+    font-size: 27px;
+    margin-right: 5px;
+}
+
+.discount-row .val {
+    color: #f7d488;
+    font-size: 32px;
+    margin: 0 8px;
+    white-space: nowrap;
+}
+
+/* Small adjustments for specific labels */
+.euro-sep {
+    display: inline-block;
+    padding-left: 6px;
+}
+
+.special-spacing-fix .euro-sep {
+    padding-left: 6px;
+}
+
+.olives-cbd .title {
+    color: #f7d488;
+}

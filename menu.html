@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024">
+    <title>CBD MENU JUNGLE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- SUPABASE REMOVED -->
+    <style>
+        /* HARD STEALTH LOCK: Hide everything initially in Sandbox mode */
+        body.sandbox-mode .section,
+        body.sandbox-mode .discounts {
+            display: none !important;
+        }
+
+        /* Only reveal if specifically activated by the dashboard */
+        body.sandbox-mode .section.active {
+            display: flex !important;
+        }
+
+        body.sandbox-mode .discounts.active {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="menu-container" id="menu-app">
+        <!-- Sections will be rendered here by JS -->
+    </div>
+
+    <script>
+        // 1. Maintain the position mapping and include the new 'Others' section
+        const POSITION_MAP = {
+            1: { id: "fleurs-hydro", top: "109px", left: "73px", width: "245px" },
+            2: { id: "fleurs-elite", top: "216px", left: "73px", width: "245px" },
+            3: { id: "resine-cbd", top: "109px", left: "340px", width: "257px" },
+            4: { id: "olives-cbd", top: "331px", left: "336px", width: "279px" },
+            5: { id: "resine-cbn", top: "109px", left: "624px", width: "206px" },
+            6: { id: "fleurs-cbn", top: "218px", left: "624px", width: "206px" },
+            7: { id: "others-section", top: "477px", left: "108px", width: "660px" }
+        };
+
+        async function renderSupabaseMenu(overrideCats = null, overrideProducts = null, activeCatIdsStr = null) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isSandbox = urlParams.get('mode') === 'sandbox';
+            const container = document.getElementById('menu-app');
+
+            if (isSandbox) document.body.classList.add('sandbox-mode');
+
+            try {
+                // LOCAL DATA ONLY
+                let categories = overrideCats;
+                if (!categories) {
+                    const sessionCats = JSON.parse(sessionStorage.getItem('cbd_gen_cats') || "[]");
+                    const localCats = JSON.parse(localStorage.getItem('cbd_local_categories') || "[]");
+                    categories = [...localCats, ...sessionCats];
+                }
+
+                let products = overrideProducts;
+                const sessionTime = urlParams.get('session_time');
+
+                if (!products) {
+                    const sessionProds = JSON.parse(sessionStorage.getItem('cbd_session_products') || "[]");
+                    const localProds = JSON.parse(localStorage.getItem('cbd_local_products') || "[]");
+
+                    if (isSandbox) {
+                        // In sandbox, we prioritize session-created items to match generator logic
+                        const uniqueIds = new Set(sessionProds.map(p => p.id));
+                        products = [...sessionProds, ...localProds.filter(p => !uniqueIds.has(p.id))];
+                    } else {
+                        products = localProds;
+                    }
+                }
+
+                // PARSE ACTIVE LIST
+                const activeParam = activeCatIdsStr || urlParams.get('active_cats') || sessionStorage.getItem('cbd_active_slots') || "";
+                const activeCatIds = typeof activeParam === 'string' ? activeParam.split(',').filter(id => id).map(String) : Object.values(JSON.parse(activeParam || "{}")).map(String);
+
+                // IMPORTANT: Only clear 'active' if we have a valid new list to replace it with
+                if (activeCatIds.length > 0 || isSandbox) {
+                    container.querySelectorAll('.section, .discounts').forEach(s => {
+                        s.classList.remove('active');
+                    });
+                }
+
+                categories.forEach((sec) => {
+                    const order = parseInt(sec.display_order);
+                    const pos = POSITION_MAP[order];
+                    if (!pos) return;
+
+                    let secDiv = container.querySelector(`[data-cat-id="${sec.id}"]`);
+                    if (!secDiv) {
+                        secDiv = document.createElement('div');
+                        secDiv.setAttribute('data-cat-id', sec.id);
+                        container.appendChild(secDiv);
+                    }
+
+                    // SANDBOX VISIBILITY: Fix for immediate display of generators
+                    if (isSandbox && (activeCatIds.includes(String(sec.id)) || String(sec.id).startsWith('session_slot_'))) {
+                        secDiv.classList.add('active');
+                    } else if (!isSandbox) {
+                        secDiv.classList.add('active');
+                    }
+
+                    const isOthers = order === 7;
+                    if (isOthers) {
+                        secDiv.classList.add('discounts');
+                    } else {
+                        secDiv.classList.add('section');
+                        secDiv.classList.add(pos.id);
+                    }
+                    secDiv.style.cssText = `top: ${pos.top}; left: ${pos.left}; width: ${pos.width};`;
+
+                    // FORCED REBUILD: Ensure title is always present
+                    secDiv.innerHTML = '';
+
+                    let itemsHtml = isOthers ? '' : `<h2 class="title">${sec.name}</h2>`;
+                    const catProducts = products ? products.filter(p => p.category_id === sec.id) : [];
+
+                    // Wrap items in a container for flex gap control
+                    itemsHtml += `<div class="${isOthers ? 'discount-list' : 'items-list ' + (pos.id + '-list')}">`;
+
+                    // --- SLOT 7 SPECIAL LOGIC: Title as temporary row ---
+                    if (isOthers && catProducts.length === 0) {
+                        itemsHtml += `
+                            <div class="slot7-title-style">
+                                ${sec.name}
+                            </div>
+                        `;
+                    }
+
+                    catProducts.forEach((item, index) => {
+                        const formattedName = item.name.toUpperCase();
+
+                        // Smart Shorthand Logic for Price (e.g., 8/1 -> 8€/G, 5/2 -> 5€/2G)
+                        let rawPrice = String(item.price_per_gram || '').replace(/€/g, '').trim();
+                        let formattedPrice = '';
+
+                        if (rawPrice.includes('/')) {
+                            const [price, qty] = rawPrice.split('/');
+                            if (qty === '1') {
+                                formattedPrice = `${price}€/G`;
+                            } else {
+                                formattedPrice = `${price}€/${qty}G`;
+                            }
+                        } else if (rawPrice) {
+                            formattedPrice = `${rawPrice}€`;
+                        }
+
+                        let rawBulk = String(item.bulk_price || '');
+                        let formattedBulk = '';
+
+                        let cleanBulk = rawBulk.replace(/€/g, '').trim();
+                        if (cleanBulk.includes('/')) {
+                            const [bPrice, bQty] = cleanBulk.split('/');
+                            formattedBulk = bQty === '1' ? `${bPrice}€/G` : `${bPrice}€/${bQty}G`;
+                        } else if (/[a-zA-Z]/.test(cleanBulk)) {
+                            // If it contains letters (alphabet), treat as free text
+                            formattedBulk = cleanBulk;
+                        } else if (cleanBulk) {
+                            // Pure numbers get the auto-euro
+                            formattedBulk = `${cleanBulk}€`;
+                        }
+
+
+
+                        if (isOthers) {
+                            itemsHtml += `
+                                <div class="discount-row ${index === 1 ? 'special-spacing-fix' : ''}" data-product-id="${item.id}">
+                                    <span class="qty">${formattedName}</span> 
+                                    <span class="val">${index === 1 ? formattedPrice.replace(/€/g, '&nbsp;<span class="euro-sep">€</span>') : formattedPrice.replace(/€/g, '<span class="euro-sep">€</span>')}</span> 
+                                    <span style="margin-left:10px;">${index === 1 ? formattedBulk.replace(/€/g, '&nbsp;<span class="euro-sep">€</span>') : formattedBulk.replace(/€/g, '<span class="euro-sep">€</span>')}</span>
+                                </div>
+                            `;
+                        } else {
+                            itemsHtml += `
+                                <div class="item" data-product-id="${item.id}">
+                                    <span class="name">${formattedName}</span>
+                                    <span class="dots"></span>
+                                    <span class="price">${formattedPrice} <span class="bulk">${formattedBulk}</span></span>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    // Add Sandbox Placeholder item
+                    if (isSandbox) {
+                        if (isOthers) {
+                            itemsHtml += `
+                                <div class="discount-row sandbox-item" data-product-id="sandbox-item" style="display:none;">
+                                    <span class="qty">NOM</span> 
+                                    <span class="val">PRIX</span> 
+                                    <span style="margin-left:10px;">QUANTITÉ</span>
+                                </div>
+                            `;
+                        } else {
+                            itemsHtml += `
+                                <div class="item sandbox-item" data-product-id="sandbox-item" style="display:none;">
+                                    <span class="name">NOM</span>
+                                    <span class="dots"></span>
+                                    <span class="price">PRIX <span class="bulk">QUANTITÉ</span></span>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    itemsHtml += `</div>`; // Close the list container
+                    secDiv.innerHTML = itemsHtml;
+                    container.appendChild(secDiv);
+                });
+
+            } catch (err) {
+                console.error("Supabase error:", err);
+            }
+        }
+
+        // SMOOTH TRANSITION API: Lock in a product without reloading
+        window.stickifyProduct = function (catId, newId) {
+            const section = document.querySelector(`[data-cat-id="${catId}"]`);
+            if (!section) return;
+
+            const sandbox = section.querySelector('[data-product-id="sandbox-item"]');
+            if (!sandbox || sandbox.style.display === 'none') return;
+
+            // Clone the sandbox item to make it permanent
+            const newItem = sandbox.cloneNode(true);
+            newItem.classList.remove('sandbox-item');
+            newItem.setAttribute('data-product-id', newId);
+            newItem.style.display = ''; // Use default CSS display
+
+            // Insert it before the sandbox item so the sandbox stays at the bottom
+            sandbox.parentNode.insertBefore(newItem, sandbox);
+
+            // Hide the original sandbox placeholder to prepare for next add
+            sandbox.style.display = 'none';
+        }
+
+        // LIGHTNING SWITCH API: Show/Hide categories instantly
+        window.switchActiveCategory = function (catId, show) {
+            const section = document.querySelector(`[data-cat-id="${catId}"]`);
+            if (section) {
+                if (show) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            }
+        }
+
+        // INSTANT VANISH API: Remove a product from the board instantly
+        window.removeProductFromPreview = function (productId) {
+            const item = document.querySelector(`[data-product-id="${productId}"]`);
+            if (item) item.remove();
+        }
+
+        // PERSISTENT SYNC API: Update board without page reload
+        window.syncBoardState = async function (activeCatIdsStr, newSessionTime, localCachedCats = null, localCachedProducts = null) {
+            const url = new URL(window.location.href);
+            if (activeCatIdsStr !== null) url.searchParams.set('active_cats', activeCatIdsStr);
+            if (newSessionTime) url.searchParams.set('session_time', newSessionTime);
+
+            // Update URL without reloading the page for consistency
+            window.history.replaceState({}, '', url);
+
+            // Re-render internally using the current state
+            await renderSupabaseMenu(localCachedCats, localCachedProducts, activeCatIdsStr);
+        }
+
+        // Initialize rendering
+        renderSupabaseMenu();
+
+        // Listen for real-time changes (Disabled in Sandbox to prevent background flickering)
+        if (typeof isSandbox !== 'undefined' && !isSandbox) {
+            supabaseClient.channel('menu-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, renderSupabaseMenu)
+                .subscribe();
+        }
+
+        // --- SECRET ADMIN SHORTCUT ---
+        let secretKeyCount = 0;
+        let lastKeyPressTime = 0;
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === '5') {
+                const currentTime = Date.now();
+                if (currentTime - lastKeyPressTime > 1000) secretKeyCount = 0;
+
+                secretKeyCount++;
+                lastKeyPressTime = currentTime;
+
+                if (secretKeyCount === 3) window.location.href = 'index.html';
+            } else {
+                secretKeyCount = 0;
+            }
+        });
+    </script>
+</body>
+
+</html>
