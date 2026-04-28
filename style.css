@@ -132,6 +132,23 @@ body::-webkit-scrollbar {
     font-weight: 800;
 }
 
+/* Dynamic Compact Layout Logic */
+.compact-layout .title {
+    margin-bottom: 12px !important;
+}
+
+.compact-layout .items-list {
+    gap: 17px !important;
+}
+
+.ultra-compact-layout .title {
+    margin-bottom: 12px !important;
+}
+
+.ultra-compact-layout .items-list {
+    gap: 16px !important;
+}
+
 .item {
     display: flex;
     align-items: center;

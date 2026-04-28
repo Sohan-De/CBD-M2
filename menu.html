@@ -136,11 +136,34 @@
                     secDiv.classList.add(pos.id);
                     secDiv.style.cssText = `top: ${pos.top}; left: ${pos.left}; width: ${pos.width};`;
 
-                    // FORCED REBUILD: Ensure title is always present
-                    secDiv.innerHTML = '';
-
-                    let itemsHtml = `<h2 class="title">${sec.name}</h2>`;
                     const catProducts = products ? products.filter(p => p.category_id === sec.id) : [];
+
+                    // DYNAMIC COMPACT LOGIC: Slots 2, 5, 8
+                    let isCompact = false;
+                    let isUltraCompact = false;
+                    if ([2, 5, 8].includes(order)) {
+                        const nextSlot = order + 1;
+                        if (disabledSlots.includes(nextSlot)) {
+                            if (catProducts.length >= 6) {
+                                isUltraCompact = true;
+                            } else if (catProducts.length >= 3) {
+                                isCompact = true;
+                            }
+                        }
+                    }
+
+                    if (isUltraCompact) {
+                        secDiv.classList.add('ultra-compact-layout');
+                        secDiv.classList.remove('compact-layout');
+                    } else if (isCompact) {
+                        secDiv.classList.add('compact-layout');
+                        secDiv.classList.remove('ultra-compact-layout');
+                    } else {
+                        secDiv.classList.remove('compact-layout', 'ultra-compact-layout');
+                    }
+
+                    secDiv.innerHTML = '';
+                    let itemsHtml = `<h2 class="title">${sec.name}</h2>`;
 
                     // Wrap items in a container for flex gap control
                     itemsHtml += `<div class="items-list ${pos.id}-list">`;
