@@ -55,20 +55,20 @@ body::-webkit-scrollbar {
 .fleurs-hydro-list {
     gap: 17px;
     padding-left: 10px;
-    padding-right: 10px;
+    padding-right: 16px;
 }
 
 .fleurs-elite-list {
     gap: 17px;
     padding-left: 10px;
-    padding-right: 10px;
+    padding-right: 16px;
 }
 
 .resine-cbd-list {
     gap: 19px;
     margin-top: -2px;
     padding-left: 10px;
-    padding-right: 10px;
+    padding-right: 16px;
 }
 
 .olives-cbd-list {
