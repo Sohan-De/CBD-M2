@@ -11,7 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Cinzel:wght@700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="admin.css">
-    <link rel="preload" as="image" href="images/Menu Hero.png">
+    <link rel="preload" as="image" href="images/Menu-grid2.jpg">
     <style>
         .iframe-wrapper { background: #0d0d0d !important; }
     </style>
@@ -48,7 +48,7 @@
                         <div class="live-tool-layout">
                             <div class="form-section">
                                 <div id="slots-container" class="slots-container mini-scroll" style="flex: 1;">
-                                    <!-- Slots 1 to 7 will be rendered here by JS -->
+                                    <!-- Slots 1 to 5 will be rendered here by JS -->
                                     <div class="loading-state"
                                         style="text-align:center; padding: 40px; color: rgba(255,255,255,0.2);">
                                         <i data-lucide="loader-2" class="spin" style="margin-bottom: 10px;"></i>
@@ -441,10 +441,9 @@
             const rawBulk = document.getElementById('modal-bulk').value;
             const catId = document.getElementById('modal-category').value;
             const cat = window.cachedCategories.find(c => c.id === catId);
-            const isOthers = cat && cat.display_order === 7;
 
             const cleanPrice = rawPrice.replace(/[€\s]/g, '');
-            const cleanBulk = isOthers ? rawBulk.trim() : rawBulk.replace(/[€\s]/g, '');
+            const cleanBulk = rawBulk.replace(/[€\s]/g, '');
 
             const updatedProduct = {
                 name: document.getElementById('modal-name').value,
@@ -486,7 +485,6 @@
                 if (!catId) return;
 
                 const cat = window.cachedCategories.find(c => c.id === catId);
-                const isOthersCat = cat && cat.display_order === 7;
 
                 // 1. FORMATTING
                 let formattedPrice = '';
@@ -545,7 +543,7 @@
                             if (item.classList.contains('item')) {
                                 if (pEl.firstChild) pEl.firstChild.textContent = (formattedPrice || 'PRIX') + " ";
                             } else {
-                                pEl.innerHTML = isOthersCat ? (formattedPrice || 'PRIX').replace(/€/g, '<span class="euro-sep">€</span>') : formattedPrice;
+                                pEl.innerHTML = formattedPrice;
                             }
                         }
 
@@ -555,7 +553,7 @@
                                 const bSpan = item.querySelector('.bulk');
                                 if (bSpan) bSpan.innerText = formattedBulk || 'QUANTITÉ';
                             } else {
-                                bEl.innerHTML = isOthersCat ? (formattedBulk || 'QUANTITÉ').replace(/€/g, '<span class="euro-sep">€</span>') : (formattedBulk || 'QUANTITÉ');
+                                bEl.innerHTML = formattedBulk || 'QUANTITÉ';
                             }
                         }
                     });
@@ -699,7 +697,7 @@
                 showToast("Version supprimée", "success");
 
                 // 3. Cleanup active slots (Revert to default placeholders)
-                for(let i=1; i<=7; i++) {
+                for(let i=1; i<=5; i++) {
                     if (window.activeSlotCategories[i] === catId) {
                         const defaultId = `session_slot_${i}`;
                         window.activeSlotCategories[i] = defaultId;
@@ -833,8 +831,8 @@
         window.cachedProducts = [];
         window.pageLoadTime = new Date().toISOString();
 
-        // --- STARTER TEMPLATE: Populate Slots 1-7 with placeholders ---
-        for (let i = 1; i <= 7; i++) {
+        // --- STARTER TEMPLATE: Populate Slots 1-5 with placeholders ---
+        for (let i = 1; i <= 5; i++) {
             const stableId = `session_slot_${i}`;
             const placeholder = { 
                 id: stableId, 
@@ -872,7 +870,7 @@
 
             let html = '';
 
-            for (let i = 1; i <= 7; i++) {
+            for (let i = 1; i <= 5; i++) {
                 // Filter categories that belong to this slot (order position)
                 const slotCats = categories.filter(c => parseInt(c.display_order) === i);
 
@@ -1171,7 +1169,7 @@
             // instead of reading the screen. This ensures that even if the sidebar 
             // is "re-drawing", we send a complete list of all saved selections.
             const activeCatIds = [];
-            for (let i = 1; i <= 7; i++) {
+            for (let i = 1; i <= 5; i++) {
                 const val = window.activeSlotCategories[i];
                 if (val) activeCatIds.push(val);
             }

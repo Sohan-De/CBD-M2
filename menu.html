@@ -40,11 +40,9 @@
         const POSITION_MAP = {
             1: { id: "fleurs-hydro", top: "109px", left: "73px", width: "245px" },
             2: { id: "fleurs-elite", top: "216px", left: "73px", width: "245px" },
-            3: { id: "resine-cbd", top: "109px", left: "340px", width: "257px" },
-            4: { id: "olives-cbd", top: "331px", left: "336px", width: "279px" },
-            5: { id: "resine-cbn", top: "109px", left: "624px", width: "206px" },
-            6: { id: "fleurs-cbn", top: "218px", left: "624px", width: "206px" },
-            7: { id: "others-section", top: "477px", left: "108px", width: "660px" }
+            3: { id: "resine-cbd", top: "320px", left: "73px", width: "245px" },
+            4: { id: "olives-cbd", top: "109px", left: "340px", width: "257px" },
+            5: { id: "resine-cbn", top: "110px", left: "624px", width: "206px" }
         };
 
         async function renderSupabaseMenu(overrideCats = null, overrideProducts = null, activeCatIdsStr = null) {
@@ -109,32 +107,18 @@
                         secDiv.classList.add('active');
                     }
 
-                    const isOthers = order === 7;
-                    if (isOthers) {
-                        secDiv.classList.add('discounts');
-                    } else {
-                        secDiv.classList.add('section');
-                        secDiv.classList.add(pos.id);
-                    }
+                    secDiv.classList.add('section');
+                    secDiv.classList.add(pos.id);
                     secDiv.style.cssText = `top: ${pos.top}; left: ${pos.left}; width: ${pos.width};`;
 
                     // FORCED REBUILD: Ensure title is always present
                     secDiv.innerHTML = '';
 
-                    let itemsHtml = isOthers ? '' : `<h2 class="title">${sec.name}</h2>`;
+                    let itemsHtml = `<h2 class="title">${sec.name}</h2>`;
                     const catProducts = products ? products.filter(p => p.category_id === sec.id) : [];
 
                     // Wrap items in a container for flex gap control
-                    itemsHtml += `<div class="${isOthers ? 'discount-list' : 'items-list ' + (pos.id + '-list')}">`;
-
-                    // --- SLOT 7 SPECIAL LOGIC: Title as temporary row ---
-                    if (isOthers && catProducts.length === 0) {
-                        itemsHtml += `
-                            <div class="slot7-title-style">
-                                ${sec.name}
-                            </div>
-                        `;
-                    }
+                    itemsHtml += `<div class="items-list ${pos.id}-list">`;
 
                     catProducts.forEach((item, index) => {
                         const formattedName = item.name.toUpperCase();
@@ -161,54 +145,29 @@
                         if (cleanBulk.includes('/')) {
                             const [bPrice, bQty] = cleanBulk.split('/');
                             formattedBulk = bQty === '1' ? `${bPrice}€/G` : `${bPrice}€/${bQty}G`;
-                        } else if (/[a-zA-Z]/.test(cleanBulk)) {
-                            // If it contains letters (alphabet), treat as free text
-                            formattedBulk = cleanBulk;
                         } else if (cleanBulk) {
                             // Pure numbers get the auto-euro
                             formattedBulk = `${cleanBulk}€`;
                         }
 
-
-
-                        if (isOthers) {
-                            itemsHtml += `
-                                <div class="discount-row ${index === 1 ? 'special-spacing-fix' : ''}" data-product-id="${item.id}">
-                                    <span class="qty">${formattedName}</span> 
-                                    <span class="val">${index === 1 ? formattedPrice.replace(/€/g, '&nbsp;<span class="euro-sep">€</span>') : formattedPrice.replace(/€/g, '<span class="euro-sep">€</span>')}</span> 
-                                    <span style="margin-left:10px;">${index === 1 ? formattedBulk.replace(/€/g, '&nbsp;<span class="euro-sep">€</span>') : formattedBulk.replace(/€/g, '<span class="euro-sep">€</span>')}</span>
-                                </div>
-                            `;
-                        } else {
-                            itemsHtml += `
+                        itemsHtml += `
                                 <div class="item" data-product-id="${item.id}">
                                     <span class="name">${formattedName}</span>
                                     <span class="dots"></span>
                                     <span class="price">${formattedPrice} <span class="bulk">${formattedBulk}</span></span>
                                 </div>
                             `;
-                        }
                     });
 
                     // Add Sandbox Placeholder item
                     if (isSandbox) {
-                        if (isOthers) {
-                            itemsHtml += `
-                                <div class="discount-row sandbox-item" data-product-id="sandbox-item" style="display:none;">
-                                    <span class="qty">NOM</span> 
-                                    <span class="val">PRIX</span> 
-                                    <span style="margin-left:10px;">QUANTITÉ</span>
-                                </div>
-                            `;
-                        } else {
-                            itemsHtml += `
-                                <div class="item sandbox-item" data-product-id="sandbox-item" style="display:none;">
-                                    <span class="name">NOM</span>
-                                    <span class="dots"></span>
-                                    <span class="price">PRIX <span class="bulk">QUANTITÉ</span></span>
-                                </div>
-                            `;
-                        }
+                        itemsHtml += `
+                            <div class="item sandbox-item" data-product-id="sandbox-item" style="display:none;">
+                                <span class="name">NOM</span>
+                                <span class="dots"></span>
+                                <span class="price">PRIX <span class="bulk">QUANTITÉ</span></span>
+                            </div>
+                        `;
                     }
 
                     itemsHtml += `</div>`; // Close the list container

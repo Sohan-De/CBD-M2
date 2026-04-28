@@ -32,7 +32,7 @@ body::-webkit-scrollbar {
 .menu-container {
     width: 1024px;
     height: 680px;
-    background: url('images/Menu%20Hero.png') no-repeat center center;
+    background: url('images/Menu-grid2.jpg') no-repeat center center;
     background-size: 1024px 680px;
     position: relative;
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
@@ -85,13 +85,6 @@ body::-webkit-scrollbar {
     padding-right: 6px;
 }
 
-.fleurs-cbn-list {
-    gap: 17px;
-    margin-top: 4px;
-    padding-left: 4px;
-    padding-right: 6px;
-}
-
 .title {
     font-family: 'Cinzel', serif;
     font-size: 19px;
@@ -139,73 +132,6 @@ body::-webkit-scrollbar {
 }
 
 /*
-
-/* Bottom Discounts section on the wooden steps */
-.discounts {
-    position: absolute;
-    top: 505px;
-    left: 175px;
-    width: 670px;
-    display: flex;
-    flex-direction: column;
-}
-
-.discount-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    /* You can adjust this gap for discount rows */
-}
-
-/* --- SLOT 7 PREMIUM TITLE STYLE --- */
-.slot7-title-style {
-    font-family: 'Cinzel', serif;
-    font-size: 19px;
-    color: #f7d488;
-    text-shadow: 1px 1px 1px #000, 0 0 8px rgba(247, 212, 136, 0.4);
-    text-align: center;
-    width: 100%;
-    margin-top: 13px;
-    margin-bottom: 12px;
-    letter-spacing: 1px;
-    font-weight: 800;
-}
-
-.discount-row {
-    font-size: 21px;
-    font-weight: 800;
-    text-transform: uppercase;
-    text-align: center;
-    color: #fff;
-    text-shadow: 2px 2px 4px #000;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.discount-row .qty {
-    color: #f7d488;
-    font-size: 27px;
-    margin-right: 5px;
-}
-
-.discount-row .val {
-    color: #f7d488;
-    font-size: 32px;
-    margin: 0 8px;
-    white-space: nowrap;
-}
-
-/* Small adjustments for specific labels */
-.euro-sep {
-    display: inline-block;
-    padding-left: 6px;
-}
-
-.special-spacing-fix .euro-sep {
-    padding-left: 6px;
-}
 
 .olives-cbd .title {
     color: #f7d488;
