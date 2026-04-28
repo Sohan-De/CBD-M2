@@ -32,7 +32,17 @@
 
 <body>
     <div class="menu-container" id="menu-app">
+        <img src="images/Menu_Grid.png" class="menu-bg" alt="Background">
         <!-- Sections will be rendered here by JS -->
+        <div class="promo-banner promo-1">
+            <span class="promo-qty">30g</span> acheté<br><span class="promo-price">= 60€</span><br>de réduction
+        </div>
+        <div class="promo-banner promo-2">
+            <span class="promo-qty">50g</span> acheté<br><span class="promo-price">= 120€</span><br>de réduction
+        </div>
+        <div class="promo-banner promo-3">
+            <span class="promo-qty">100g</span> acheté<br><span class="promo-price">= 240€</span><br>de réduction
+        </div>
     </div>
 
     <script>
@@ -40,13 +50,13 @@
         const POSITION_MAP = {
             1: { id: "fleurs-hydro", top: "109px", left: "85px", width: "245px" },
             2: { id: "fleurs-elite", top: "215px", left: "85px", width: "245px" },
-            3: { id: "resine-cbd", top: "320px", left: "85px", width: "245px" },
+            3: { id: "resine-cbd", top: "319px", left: "85px", width: "245px" },
             4: { id: "olives-cbd", top: "109px", left: "340px", width: "257px" },
             5: { id: "resine-cbn", top: "215px", left: "340px", width: "257px" },
-            6: { id: "resine-cbd-2", top: "320px", left: "340px", width: "257px" },
+            6: { id: "resine-cbd-2", top: "319px", left: "340px", width: "257px" },
             7: { id: "resine-cbn-2", top: "109px", left: "617px", width: "206px" },
             8: { id: "fleurs-elite-2", top: "215px", left: "617px", width: "206px" },
-            9: { id: "fleurs-hydro-2", top: "320px", left: "617px", width: "206px" }
+            9: { id: "fleurs-hydro-2", top: "319px", left: "617px", width: "206px" }
         };
 
         async function renderSupabaseMenu(overrideCats = null, overrideProducts = null, activeCatIdsStr = null, disabledSlotsStr = null) {
@@ -55,7 +65,7 @@
             const container = document.getElementById('menu-app');
 
             if (isSandbox) document.body.classList.add('sandbox-mode');
-            
+
             let disabledSlots = [];
             const disabledParam = disabledSlotsStr || urlParams.get('disabled_slots');
             if (disabledParam !== null) {
