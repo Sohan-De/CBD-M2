@@ -38,19 +38,30 @@
     <script>
         // 1. Maintain the position mapping and include the new 'Others' section
         const POSITION_MAP = {
-            1: { id: "fleurs-hydro", top: "109px", left: "73px", width: "245px" },
-            2: { id: "fleurs-elite", top: "216px", left: "73px", width: "245px" },
-            3: { id: "resine-cbd", top: "320px", left: "73px", width: "245px" },
+            1: { id: "fleurs-hydro", top: "109px", left: "85px", width: "245px" },
+            2: { id: "fleurs-elite", top: "215px", left: "85px", width: "245px" },
+            3: { id: "resine-cbd", top: "320px", left: "85px", width: "245px" },
             4: { id: "olives-cbd", top: "109px", left: "340px", width: "257px" },
-            5: { id: "resine-cbn", top: "110px", left: "624px", width: "206px" }
+            5: { id: "resine-cbn", top: "110px", left: "617px", width: "206px" }
         };
 
-        async function renderSupabaseMenu(overrideCats = null, overrideProducts = null, activeCatIdsStr = null) {
+        async function renderSupabaseMenu(overrideCats = null, overrideProducts = null, activeCatIdsStr = null, disabledSlotsStr = null) {
             const urlParams = new URLSearchParams(window.location.search);
             const isSandbox = urlParams.get('mode') === 'sandbox';
             const container = document.getElementById('menu-app');
 
             if (isSandbox) document.body.classList.add('sandbox-mode');
+            
+            let disabledSlots = [];
+            const disabledParam = disabledSlotsStr || urlParams.get('disabled_slots');
+            if (disabledParam !== null) {
+                disabledSlots = disabledParam.split(',').filter(s => s).map(Number);
+            } else {
+                const visObj = JSON.parse(sessionStorage.getItem('cbd_slot_visibility') || "{}");
+                Object.keys(visObj).forEach(slot => {
+                    if (!visObj[slot]) disabledSlots.push(Number(slot));
+                });
+            }
 
             try {
                 // LOCAL DATA ONLY
@@ -98,6 +109,15 @@
                         secDiv = document.createElement('div');
                         secDiv.setAttribute('data-cat-id', sec.id);
                         container.appendChild(secDiv);
+                    }
+
+                    // HIDE IF SLOT IS DISABLED
+                    if (disabledSlots.includes(order)) {
+                        secDiv.classList.remove('active');
+                        secDiv.style.display = 'none';
+                        return;
+                    } else {
+                        secDiv.style.display = '';
                     }
 
                     // SANDBOX VISIBILITY: Fix for immediate display of generators
@@ -220,16 +240,17 @@
         }
 
         // PERSISTENT SYNC API: Update board without page reload
-        window.syncBoardState = async function (activeCatIdsStr, newSessionTime, localCachedCats = null, localCachedProducts = null) {
+        window.syncBoardState = async function (activeCatIdsStr, newSessionTime, localCachedCats = null, localCachedProducts = null, disabledSlotsStr = null) {
             const url = new URL(window.location.href);
             if (activeCatIdsStr !== null) url.searchParams.set('active_cats', activeCatIdsStr);
             if (newSessionTime) url.searchParams.set('session_time', newSessionTime);
+            if (disabledSlotsStr !== null) url.searchParams.set('disabled_slots', disabledSlotsStr);
 
             // Update URL without reloading the page for consistency
             window.history.replaceState({}, '', url);
 
             // Re-render internally using the current state
-            await renderSupabaseMenu(localCachedCats, localCachedProducts, activeCatIdsStr);
+            await renderSupabaseMenu(localCachedCats, localCachedProducts, activeCatIdsStr, disabledSlotsStr);
         }
 
         // Initialize rendering

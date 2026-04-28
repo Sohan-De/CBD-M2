@@ -54,35 +54,34 @@ body::-webkit-scrollbar {
 /* Individual Gap Control for each section */
 .fleurs-hydro-list {
     gap: 17px;
-    padding-left: 4px;
-    padding-right: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .fleurs-elite-list {
     gap: 17px;
-    margin-top: 4px;
-    padding-left: 4px;
-    padding-right: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .resine-cbd-list {
     gap: 19px;
     margin-top: -2px;
-    padding-left: 4px;
-    padding-right: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .olives-cbd-list {
     gap: 16px;
     margin-top: 2px;
-    padding-left: 4px;
-    padding-right: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .resine-cbn-list {
     gap: 17px;
-    padding-left: 4px;
-    padding-right: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .title {

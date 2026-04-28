@@ -827,6 +827,7 @@
         sessionStorage.clear();
 
         window.activeSlotCategories = {};
+        window.slotVisibility = { 1: true, 2: true, 3: true, 4: true, 5: true };
         window.cachedCategories = [];
         window.cachedProducts = [];
         window.pageLoadTime = new Date().toISOString();
@@ -852,6 +853,7 @@
         // Helper to save state (Generator Mode: Save all ephemeral data)
         function saveSlotState() {
             sessionStorage.setItem('cbd_active_slots', JSON.stringify(window.activeSlotCategories));
+            sessionStorage.setItem('cbd_slot_visibility', JSON.stringify(window.slotVisibility));
             
             // Save generated categories
             const genCats = (window.cachedCategories || []).filter(c => c.is_generated);
@@ -888,9 +890,17 @@
                 }) : [];
 
                 html += `
-                    <div class="slot-card ${activeCatId ? 'active' : ''}" id="slot-${i}">
+                    <div class="slot-card ${activeCatId ? 'active' : ''} ${window.slotVisibility[i] ? '' : 'slot-disabled'}" id="slot-${i}">
                         <div class="slot-header">
-                            <span>Catégorie ${i}</span>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span>Catégorie ${i}</span>
+                                ${(i === 2 || i === 3) ? `
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" ${window.slotVisibility[i] ? 'checked' : ''} onchange="toggleSlotVisibility(${i}, this.checked)">
+                                        <span class="slider"></span>
+                                    </label>
+                                ` : ''}
+                            </div>
                             <i data-lucide="layers" style="width:14px; opacity:0.3;"></i>
                         </div>
 
@@ -1169,21 +1179,38 @@
             // instead of reading the screen. This ensures that even if the sidebar 
             // is "re-drawing", we send a complete list of all saved selections.
             const activeCatIds = [];
+            const disabledSlots = [];
             for (let i = 1; i <= 5; i++) {
                 const val = window.activeSlotCategories[i];
                 if (val) activeCatIds.push(val);
+                if (!window.slotVisibility[i]) disabledSlots.push(i);
             }
             saveSlotState();
 
             const activeCatsStr = activeCatIds.join(',');
+            const disabledSlotsStr = disabledSlots.join(',');
             const sessionTime = window.pageLoadTime;
 
             // SILENT SYNC with Lag Shield
             if (iframe.contentWindow && iframe.contentWindow.syncBoardState) {
-                iframe.contentWindow.syncBoardState(activeCatsStr, sessionTime, window.cachedCategories, window.cachedProducts);
+                iframe.contentWindow.syncBoardState(activeCatsStr, sessionTime, window.cachedCategories, window.cachedProducts, disabledSlotsStr);
             } else {
-                iframe.src = `menu.html?mode=sandbox&session_time=${sessionTime}&active_cats=${activeCatsStr}&t=` + Date.now();
+                iframe.src = `menu.html?mode=sandbox&session_time=${sessionTime}&active_cats=${activeCatsStr}&disabled_slots=${disabledSlotsStr}&t=` + Date.now();
             }
+        }
+
+        function toggleSlotVisibility(slotNum, isVisible) {
+            window.slotVisibility[slotNum] = isVisible;
+            saveSlotState();
+            
+            // Visual feedback on card
+            const card = document.getElementById(`slot-${slotNum}`);
+            if (card) {
+                if (isVisible) card.classList.remove('slot-disabled');
+                else card.classList.add('slot-disabled');
+            }
+            
+            refreshLiveIframe();
         }
 
         function showToast(message, type) {
