@@ -84,6 +84,30 @@ body::-webkit-scrollbar {
     padding-right: 10px;
 }
 
+.resine-cbd-2-list {
+    gap: 17px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.resine-cbn-2-list {
+    gap: 17px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.fleurs-elite-2-list {
+    gap: 17px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.fleurs-hydro-2-list {
+    gap: 17px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
 .title {
     font-family: 'Cinzel', serif;
     font-size: 19px;

@@ -48,7 +48,7 @@
                         <div class="live-tool-layout">
                             <div class="form-section">
                                 <div id="slots-container" class="slots-container mini-scroll" style="flex: 1;">
-                                    <!-- Slots 1 to 5 will be rendered here by JS -->
+                                    <!-- Slots 1 to 9 will be rendered here by JS -->
                                     <div class="loading-state"
                                         style="text-align:center; padding: 40px; color: rgba(255,255,255,0.2);">
                                         <i data-lucide="loader-2" class="spin" style="margin-bottom: 10px;"></i>
@@ -697,7 +697,7 @@
                 showToast("Version supprimée", "success");
 
                 // 3. Cleanup active slots (Revert to default placeholders)
-                for(let i=1; i<=5; i++) {
+                for(let i=1; i<=9; i++) {
                     if (window.activeSlotCategories[i] === catId) {
                         const defaultId = `session_slot_${i}`;
                         window.activeSlotCategories[i] = defaultId;
@@ -827,13 +827,13 @@
         sessionStorage.clear();
 
         window.activeSlotCategories = {};
-        window.slotVisibility = { 1: true, 2: true, 3: true, 4: true, 5: true };
+        window.slotVisibility = { 1:true, 2:true, 3:true, 4:true, 5:true, 6:true, 7:true, 8:true, 9:true };
         window.cachedCategories = [];
         window.cachedProducts = [];
         window.pageLoadTime = new Date().toISOString();
 
-        // --- STARTER TEMPLATE: Populate Slots 1-5 with placeholders ---
-        for (let i = 1; i <= 5; i++) {
+        // --- STARTER TEMPLATE: Populate Slots 1-9 with placeholders ---
+        for (let i = 1; i <= 9; i++) {
             const stableId = `session_slot_${i}`;
             const placeholder = { 
                 id: stableId, 
@@ -872,7 +872,7 @@
 
             let html = '';
 
-            for (let i = 1; i <= 5; i++) {
+            for (let i = 1; i <= 9; i++) {
                 // Filter categories that belong to this slot (order position)
                 const slotCats = categories.filter(c => parseInt(c.display_order) === i);
 
@@ -894,7 +894,7 @@
                         <div class="slot-header">
                             <div style="display:flex; align-items:center; gap:10px;">
                                 <span>Catégorie ${i}</span>
-                                ${(i === 2 || i === 3) ? `
+                                ${(i % 3 !== 1) ? `
                                     <label class="toggle-switch">
                                         <input type="checkbox" ${window.slotVisibility[i] ? 'checked' : ''} onchange="toggleSlotVisibility(${i}, this.checked)">
                                         <span class="slider"></span>
@@ -1180,7 +1180,7 @@
             // is "re-drawing", we send a complete list of all saved selections.
             const activeCatIds = [];
             const disabledSlots = [];
-            for (let i = 1; i <= 5; i++) {
+            for (let i = 1; i <= 9; i++) {
                 const val = window.activeSlotCategories[i];
                 if (val) activeCatIds.push(val);
                 if (!window.slotVisibility[i]) disabledSlots.push(i);
