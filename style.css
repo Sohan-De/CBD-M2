@@ -65,7 +65,7 @@ body::-webkit-scrollbar {
 }
 
 .resine-cbd-list {
-    gap: 19px;
+    gap: 16px;
     margin-top: -2px;
     padding-left: 10px;
     padding-right: 16px;
@@ -85,7 +85,8 @@ body::-webkit-scrollbar {
 }
 
 .resine-cbd-2-list {
-    gap: 17px;
+    gap: 15px;
+
     padding-left: 10px;
     padding-right: 10px;
 }
@@ -103,7 +104,7 @@ body::-webkit-scrollbar {
 }
 
 .fleurs-hydro-2-list {
-    gap: 17px;
+    gap: 15px;
     padding-left: 10px;
     padding-right: 10px;
 }
@@ -115,7 +116,7 @@ body::-webkit-scrollbar {
     /* Updated Brand Color */
     text-shadow: 1px 1px 1px #000, 0 0 8px rgba(201, 94, 1, 0.2);
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     letter-spacing: 1px;
     font-weight: 800;
 }
